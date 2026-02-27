@@ -34,7 +34,7 @@ export function useJobs() {
       .then(setJobs)
       .catch(err => setError(err.message))
       .finally(() => setLoading(false));
-   }, []);
+   }, [config]);
 
   return { jobs, loading, error };
 }
