@@ -17,7 +17,7 @@ export const jobs: Job[] = [
     id: "j1",
     title: "Senior Frontend Developer",
     companyId: "c1",
-    location: "San Francisco, CA",
+    location: "Lilongwe, Mw",
     type: "Full-time",
     description: "Join our engineering team to build next-generation user interfaces for enterprise cloud products. You'll work with React, TypeScript, and modern frontend tooling to deliver exceptional user experiences.",
     responsibilities: [
@@ -42,7 +42,7 @@ export const jobs: Job[] = [
     id: "j2",
     title: "Product Manager",
     companyId: "c2",
-    location: "Boston, MA",
+    location: "Mangochi, Mw",
     type: "Full-time",
     description: "Lead product strategy for our patient engagement platform. You'll define the roadmap, prioritize features, and work cross-functionally to deliver products that improve healthcare outcomes.",
     responsibilities: [
@@ -67,7 +67,7 @@ export const jobs: Job[] = [
     id: "j3",
     title: "Data Analyst",
     companyId: "c3",
-    location: "New York, NY",
+    location: "Blantyre, Mw",
     type: "Full-time",
     description: "Analyze complex financial datasets to drive business insights and support investment decisions. You'll build dashboards, create reports, and develop predictive models.",
     responsibilities: [
@@ -92,7 +92,7 @@ export const jobs: Job[] = [
     id: "j4",
     title: "UX Designer",
     companyId: "c1",
-    location: "San Francisco, CA",
+    location: "Remote",
     type: "Full-time",
     description: "Shape the user experience of our cloud platform. You'll conduct user research, create wireframes and prototypes, and work with engineers to bring designs to life.",
     responsibilities: [
@@ -117,7 +117,7 @@ export const jobs: Job[] = [
     id: "j5",
     title: "DevOps Engineer",
     companyId: "c5",
-    location: "Austin, TX",
+    location: "Zomba, Mw",
     type: "Remote",
     description: "Build and maintain scalable infrastructure for our data analytics platform. You'll work with cloud services, containerization, and CI/CD to ensure reliable deployments.",
     responsibilities: [
@@ -142,7 +142,7 @@ export const jobs: Job[] = [
     id: "j6",
     title: "Project Coordinator",
     companyId: "c4",
-    location: "Chicago, IL",
+    location: "Mzuzu, Mw",
     type: "Full-time",
     description: "Coordinate construction projects from planning through completion. You'll manage timelines, communicate with stakeholders, and ensure projects stay on track and within budget.",
     responsibilities: [
@@ -167,7 +167,7 @@ export const jobs: Job[] = [
     id: "j7",
     title: "Backend Developer",
     companyId: "c5",
-    location: "Austin, TX",
+    location: "Lilongwe, Mw",
     type: "Remote",
     description: "Design and build robust APIs and microservices for our data platform. You'll work with Node.js, PostgreSQL, and event-driven architectures to handle massive scale.",
     responsibilities: [
@@ -192,7 +192,7 @@ export const jobs: Job[] = [
     id: "j8",
     title: "Marketing Specialist",
     companyId: "c2",
-    location: "Boston, MA",
+    location: "Blantyre, Mw",
     type: "Part-time",
     description: "Drive marketing campaigns for our healthcare products. You'll create compelling content, manage social media, and analyze campaign performance.",
     responsibilities: [
@@ -217,7 +217,7 @@ export const jobs: Job[] = [
     id: "j9",
     title: "Financial Analyst",
     companyId: "c3",
-    location: "New York, NY",
+    location: "Blantyre, Mw",
     type: "Contract",
     description: "Provide financial analysis and modeling support for our investment team. You'll build financial models, prepare reports, and support due diligence processes.",
     responsibilities: [
@@ -242,7 +242,7 @@ export const jobs: Job[] = [
     id: "j10",
     title: "Site Manager",
     companyId: "c4",
-    location: "Chicago, IL",
+    location: "Mangochi, Mw",
     type: "Full-time",
     description: "Oversee construction operations on-site, ensuring quality, safety, and timeline compliance. Lead a team of workers and coordinate with subcontractors.",
     responsibilities: [

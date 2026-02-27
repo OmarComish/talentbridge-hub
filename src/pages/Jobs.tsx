@@ -2,18 +2,23 @@ import { useState, useMemo } from "react";
 import { Search, MapPin, Filter } from "lucide-react";
 import Layout from "@/components/Layout";
 import JobCard from "@/components/JobCard";
-import { jobs } from "@/data/jobs";
+//import { jobs } from "@/data/jobs";
+import { useJobs} from "@/hooks/use-jobs";
 
-const allLocations = [...new Set(jobs.map((j) => j.location))];
-const allTypes = [...new Set(jobs.map((j) => j.type))];
+//const allLocations = [...new Set(jobs.map((j) => j.location))];
+//const allTypes = [...new Set(jobs.map((j) => j.type))];
 
 const JOBS_PER_PAGE = 6;
 
 const JobsPage = () => {
+  const { jobs, loading, error } = useJobs();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedLocation, setSelectedLocation] = useState("");
   const [selectedType, setSelectedType] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+
+  const allLocations = [...new Set(jobs.map((j) => j.location))];
+  const allTypes = [...new Set(jobs.map((j) => j.type))]
 
   const filtered = useMemo(() => {
     return jobs.filter((job) => {

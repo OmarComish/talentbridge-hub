@@ -71,11 +71,11 @@ const Footer = () => {
               </li>
               <li className="flex items-center gap-2.5 text-sm text-primary-foreground/70">
                 <Phone className="w-4 h-4 shrink-0" />
-                (555) 123-4567
+                (265) 999-349649
               </li>
               <li className="flex items-center gap-2.5 text-sm text-primary-foreground/70">
                 <MapPin className="w-4 h-4 shrink-0" />
-                123 Talent Ave, San Francisco, CA
+                HS900 Nkhamenya Street, Area 47, Lilongwe, Malawi
               </li>
             </ul>
           </div>
