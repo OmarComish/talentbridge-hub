@@ -11,14 +11,10 @@ interface JobCardProps {
 const JobCard = ({ job }: JobCardProps) => {
   const { companies, loading, error } = useCompanies();
 
-  console.log("loading:", loading, "companies length:", companies.length);
-
   if (loading) return null; // or a skeleton loader
 
   const company = companies.find((c) => c.id === job.companyId);
   
-  console.log(job.companyId, companies.map(c => c.id));
-
   const typeColors: Record<string, string> = {
     "Full-time": "bg-success/10 text-success",
     "Part-time": "bg-warning/10 text-warning",

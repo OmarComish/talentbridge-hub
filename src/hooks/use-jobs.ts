@@ -24,7 +24,12 @@ export function useJobs() {
 
   useEffect(() => {
 
-    if(!config) return;
+    console.log("useJobs effect:", { loadingConfigs, config, jobsCount: jobs.length });
+    if(loadingConfigs) return;
+    if(!config){
+      setLoading(false);
+       return;
+    } 
 
     fetch(`${config.apiBaseUrl}/api/jobpostings`)
       .then(res => {
@@ -34,7 +39,7 @@ export function useJobs() {
       .then(setJobs)
       .catch(err => setError(err.message))
       .finally(() => setLoading(false));
-   }, [config]);
+   }, [config, loadingConfigs]);
 
   return { jobs, loading, error };
 }

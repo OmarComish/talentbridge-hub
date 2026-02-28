@@ -2,8 +2,10 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 import { ArrowLeft, MapPin, Clock, Building2, DollarSign, Briefcase, CheckCircle2 } from "lucide-react";
 import { useState } from "react";
 import Layout from "@/components/Layout";
-import { jobs } from "@/data/jobs";
-import { companies } from "@/data/companies";
+//import { jobs } from "@/data/jobs";
+import { useJobs} from "@/hooks/use-jobs";
+//import { companies } from "@/data/companies";
+import { useCompanies} from "@/hooks/use-companies";
 import { useAuth } from "@/context/AuthContext";
 import { useApplications } from "@/context/ApplicationContext";
 import { useToast } from "@/hooks/use-toast";
@@ -14,13 +16,33 @@ const JobDetails = () => {
   const { user, isAuthenticated } = useAuth();
   const { applyToJob, hasApplied } = useApplications();
   const { toast } = useToast();
+  const { companies, loading: loadingCompanies} = useCompanies();
+  const { jobs, loading: loadingJobs } = useJobs();
 
   const [showApplyForm, setShowApplyForm] = useState(false);
   const [coverLetter, setCoverLetter] = useState("");
   const [cvFileName, setCvFileName] = useState("");
 
-  const job = jobs.find((j) => j.id === id);
+ if (loadingCompanies || loadingJobs) return null;
+
+  const parseField = (value: any): string[] => {
+    if (Array.isArray(value)) return value;
+    if (!value) return [];
+    try { return JSON.parse(value); } catch {
+      return value.split(",").map((s: string) => s.trim()).filter(Boolean);
+    }
+  };
+
+  const rawJob = jobs.find((j) => String(j.id) === String(id));
+  const job = rawJob ? {
+    ...rawJob,
+    responsibilities: parseField(rawJob.responsibilities),
+    requirements: parseField(rawJob.requirements),
+  } : undefined;
+  console.log(`Jobs data ${job}`);
   const company = job ? companies.find((c) => c.id === job.companyId) : null;
+  console.log(`Company data ${company}`)
+  
 
   if (!job || !company) {
     return (
@@ -89,9 +111,9 @@ const JobDetails = () => {
                 { icon: Briefcase, text: job.type },
                 { icon: DollarSign, text: job.salary },
                 { icon: Clock, text: `Posted ${new Date(job.postedDate).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}` },
-              ].map((item) => (
+              ].map((item, index) => (
                 <span
-                  key={item.text}
+                  key={index}
                   className="inline-flex items-center gap-1.5 text-sm text-muted-foreground bg-muted px-3 py-1.5 rounded-lg"
                 >
                   <item.icon className="w-3.5 h-3.5" />
