@@ -23,8 +23,7 @@ export function useJobs() {
   const { config, loadingConfigs} = useConfig();
 
   useEffect(() => {
-
-    console.log("useJobs effect:", { loadingConfigs, config, jobsCount: jobs.length });
+    
     if(loadingConfigs) return;
     if(!config){
       setLoading(false);

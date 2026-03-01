@@ -9,6 +9,8 @@ import { useCompanies} from "@/hooks/use-companies";
 import { useAuth } from "@/context/AuthContext";
 import { useApplications } from "@/context/ApplicationContext";
 import { useToast } from "@/hooks/use-toast";
+import { config } from "process";
+import { useConfig} from "./use-config";
 
 const JobDetails = () => {
   const { id } = useParams<{ id: string }>();
@@ -22,6 +24,9 @@ const JobDetails = () => {
   const [showApplyForm, setShowApplyForm] = useState(false);
   const [coverLetter, setCoverLetter] = useState("");
   const [cvFileName, setCvFileName] = useState("");
+  const [cvFile, setCvFile] = useState<File | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+   const { config, loadingConfigs} = useConfig();
 
  if (loadingCompanies || loadingJobs) return null;
 
@@ -39,10 +44,8 @@ const JobDetails = () => {
     responsibilities: parseField(rawJob.responsibilities),
     requirements: parseField(rawJob.requirements),
   } : undefined;
-  console.log(`Jobs data ${job}`);
-  const company = job ? companies.find((c) => c.id === job.companyId) : null;
-  console.log(`Company data ${company}`)
   
+  const company = job ? companies.find((c) => c.id === job.companyId) : null;
 
   if (!job || !company) {
     return (
@@ -57,12 +60,53 @@ const JobDetails = () => {
 
   const alreadyApplied = user ? hasApplied(user.id, job.id) : false;
 
-  const handleApply = () => {
-    if (!user) return;
+  const handleApply = async() => {
+    if (!user || isSubmitting) return;
+    setIsSubmitting(true);
     if (!coverLetter.trim()) {
       toast({ title: "Error", description: "Please write a cover letter.", variant: "destructive" });
       return;
     }
+
+    try {
+       const formData = new FormData();
+       formData.append("userId", user.id);
+       formData.append("jobId", String(job.id));
+       formData.append("coverLetter", coverLetter.trim());
+
+       if(cvFile){
+         formData.append("cv", cvFile); //actual file binary
+       }
+
+       var response = await fetch(`${config.apiBaseUrl}/api/jobs`,{
+          method: "POST",
+          headers: {},
+          body: formData,
+       });
+
+       if(!response.ok){
+          const err = await response.json();
+          throw new Error(err.message || "Submission failed");
+       }
+
+       const result = await response.json();
+
+      // Still update local state so UI reflects the application
+      applyToJob(user.id, job.id, coverLetter.trim(), cvFileName || "resume.pdf");
+
+      toast({ title: "Application Submitted!", description: `You've applied to ${job.title} at ${company.name}.` });
+      setShowApplyForm(false);
+      setCoverLetter("");
+      setCvFileName("");
+      
+    } catch (error) {
+
+       toast({ title: "Error", description: error.message, variant: "destructive" });
+
+    } finally {
+       setIsSubmitting(false);
+    }
+
     const result = applyToJob(user.id, job.id, coverLetter.trim(), cvFileName || "resume.pdf");
     if (result.success) {
       toast({ title: "Application Submitted!", description: `You've applied to ${job.title} at ${company.name}.` });
@@ -187,18 +231,58 @@ const JobDetails = () => {
                       <input
                         type="text"
                         value={cvFileName}
-                        onChange={(e) => setCvFileName(e.target.value)}
+                        readOnly
                         placeholder="resume.pdf"
-                        className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/30"
+                        className="w-flex-1 rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/30"
                       />
-                      <p className="text-xs text-muted-foreground mt-1">Enter file name (upload simulation)</p>
+                      <button
+                        type="button"
+                        onClick={() => document.getElementById('cv-upload-input')?.click()}
+                        className="shrink-0 rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground hover:bg-muted transition-colors focus:outline-none focus:ring-2 focus:ring-ring/30"
+                      >
+                       Browse
+                      </button>
+                      {cvFileName && (
+                        <button
+                           type="button"
+                           onClick={()=>{
+                             setCvFileName('');
+                             setCvFile(null);
+                             const input = document.getElementById('cv-upload-input') as HTMLInputElement;
+                             if (input) input.value = '';
+                           }}
+                           className="shrink-0 rounded-lg border border-input bg-background px-3 py-2 text-sm text-muted-foreground hover:text-destructive hover:bg-muted transition-colors focus:outline-none focus:ring-2 focus:ring-ring/30" aria-label="Clear file"
+                        >
+                          x
+                        </button>
+                      )}
+                      
                     </div>
+                    <input 
+                       id="cv-upload-input"
+                       type="file"
+                       accept=".pdf,.docx,.doc"
+                       className="hidden"
+                       onChange={(e)=>{
+                          const file = e.target.files?.[0];
+                          if(file){
+                            setCvFile(file);
+                            setCvFileName(file.name);
+                          }
+                       }}
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {
+                        cvFile ? `${(cvFile.size / 1024).toFixed(1)} KB · ${cvFile.type || 'document'}`: 'Accepted formats: PDF, DOC, DOCX'
+                      }
+                    </p>
                     <div className="flex gap-2">
                       <button
                         onClick={handleApply}
+                        disabled={isSubmitting}
                         className="flex-1 py-2.5 rounded-lg bg-accent text-accent-foreground text-sm font-semibold hover:bg-accent/90 transition-colors"
                       >
-                        Submit Application
+                        {isSubmitting? "Submitting": "Submitting Application"}
                       </button>
                       <button
                         onClick={() => setShowApplyForm(false)}
