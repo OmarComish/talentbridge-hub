@@ -10,7 +10,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useApplications } from "@/context/ApplicationContext";
 import { useToast } from "@/hooks/use-toast";
 import { config } from "process";
-import { useConfig} from "./use-config";
+import { useConfig} from "@/hooks/use-config";
 
 const JobDetails = () => {
   const { id } = useParams<{ id: string }>();
