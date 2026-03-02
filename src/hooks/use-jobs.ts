@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useConfig} from "./use-config";
+import { useJobStream } from "./use-jobStream";
 import { set } from "date-fns";
 
 interface Job {
@@ -23,7 +24,7 @@ export function useJobs() {
   const { config, loadingConfigs} = useConfig();
 
   useEffect(() => {
-    
+
     if(loadingConfigs) return;
     if(!config){
       setLoading(false);
@@ -40,5 +41,13 @@ export function useJobs() {
       .finally(() => setLoading(false));
    }, [config, loadingConfigs]);
 
+
+  useJobStream((newJob)=>{
+     setJobs((prev)=>{
+          const alreadyExists = prev.some((j)=> j.id === newJob.id);
+          return alreadyExists? prev: [newJob, ...prev];
+     });
+
+  });
   return { jobs, loading, error };
 }

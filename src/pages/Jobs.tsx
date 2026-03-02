@@ -5,8 +5,6 @@ import JobCard from "@/components/JobCard";
 //import { jobs } from "@/data/jobs";
 import { useJobs} from "@/hooks/use-jobs";
 
-//const allLocations = [...new Set(jobs.map((j) => j.location))];
-//const allTypes = [...new Set(jobs.map((j) => j.type))];
 
 const JOBS_PER_PAGE = 6;
 
@@ -30,7 +28,7 @@ const JobsPage = () => {
       const matchesType = !selectedType || job.type === selectedType;
       return matchesSearch && matchesLocation && matchesType;
     });
-  }, [searchQuery, selectedLocation, selectedType]);
+  }, [jobs, searchQuery, selectedLocation, selectedType]);
 
   const totalPages = Math.ceil(filtered.length / JOBS_PER_PAGE);
   const paginated = filtered.slice((currentPage - 1) * JOBS_PER_PAGE, currentPage * JOBS_PER_PAGE);
@@ -49,7 +47,7 @@ const JobsPage = () => {
             Browse Jobs
           </h1>
           <p className="text-primary-foreground/70">
-            {filtered.length} {filtered.length === 1 ? "position" : "positions"} available
+            {loading ? "Loading..." : `${filtered.length} ${filtered.length === 1 ? "position" : "positions"} available`}
           </p>
         </div>
       </section>
@@ -109,7 +107,17 @@ const JobsPage = () => {
         </div>
 
         {/* Results */}
-        {paginated.length > 0 ? (
+        {loading ? (
+          <div className="text-center py-16">
+            <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+            <p className="text-muted-foreground">Loading jobs...</p>
+          </div>
+        ) : error ? (
+          <div className="text-center py-16">
+            <p className="text-destructive font-medium">Failed to load jobs</p>
+            <p className="text-muted-foreground text-sm mt-1">{error}</p>
+          </div>
+        ) : paginated.length > 0 ? (
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
               {paginated.map((job, i) => (
