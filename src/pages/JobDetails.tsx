@@ -75,10 +75,10 @@ const JobDetails = () => {
        formData.append("coverLetter", coverLetter.trim());
 
        if(cvFile){
-         formData.append("cv", cvFile); //actual file binary
+         formData.append("File", cvFile); //actual file binary
        }
 
-       var response = await fetch(`${config.apiBaseUrl}/api/jobs`,{
+       var response = await fetch(`${config.apiBaseUrl}/api/applicants/upload-resume`,{
           method: "POST",
           headers: {},
           body: formData,
@@ -90,6 +90,9 @@ const JobDetails = () => {
        }
 
        const result = await response.json();
+       console.log(result);
+
+       
 
       // Still update local state so UI reflects the application
       applyToJob(user.id, job.id, coverLetter.trim(), cvFileName || "resume.pdf");

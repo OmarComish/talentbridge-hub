@@ -1,9 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   Briefcase, Users, UserCheck, Plus, Download,
   UserCircle, X, ChevronRight, Phone, Calendar,
   Star, GraduationCap, Clock, Mail, User, CheckCircle2,
-  FileText, Loader2, AlertCircle, Building2, MapPin,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
@@ -30,15 +29,6 @@ interface ProfileForm {
   dateOfBirth: string;
   skills: string[];
   educationLevel: string;
-}
-
-interface Application {
-  id: number | string;
-  jobTitle: string;
-  company?: string;
-  location?: string;
-  status: string;
-  appliedDate: string;
 }
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -121,25 +111,6 @@ function FieldGroup({
   );
 }
 
-function statusBadge(status: string) {
-  const s = status?.toLowerCase() ?? "";
-  const map: Record<string, string> = {
-    pending:    "bg-yellow-100 text-yellow-700 border-yellow-200",
-    reviewing:  "bg-blue-100 text-blue-700 border-blue-200",
-    shortlisted:"bg-purple-100 text-purple-700 border-purple-200",
-    interview:  "bg-indigo-100 text-indigo-700 border-indigo-200",
-    offered:    "bg-green-100 text-green-700 border-green-200",
-    rejected:   "bg-red-100 text-red-700 border-red-200",
-    withdrawn:  "bg-gray-100 text-gray-500 border-gray-200",
-  };
-  const cls = map[s] ?? "bg-muted text-muted-foreground border-border";
-  return (
-    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${cls}`}>
-      {status ?? "—"}
-    </span>
-  );
-}
-
 // ─── Dashboard ────────────────────────────────────────────────────────────────
 
 export default function Dashboard() {
@@ -149,30 +120,6 @@ export default function Dashboard() {
   const [saved, setSaved] = useState(false);
   const [errors, setErrors] = useState<Partial<Record<keyof ProfileForm, string>>>({});
   const {config, loading} = useConfig();
-
-  // Applications grid state
-  const [applications, setApplications] = useState<Application[]>([]);
-  const [appsLoading, setAppsLoading] = useState(true);
-  const [appsError, setAppsError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (loading) return;
-    const fetchApplications = async () => {
-      try {
-        setAppsLoading(true);
-        setAppsError(null);
-        const response = await fetch(`${config.apiBaseUrl}/api/applications/myapplications`);
-        if (!response.ok) throw new Error(`Failed to load applications (${response.status})`);
-        const data = await response.json();
-        setApplications(Array.isArray(data) ? data : data.applications ?? []);
-      } catch (err) {
-        setAppsError(err instanceof Error ? err.message : "Failed to load applications");
-      } finally {
-        setAppsLoading(false);
-      }
-    };
-    fetchApplications();
-  }, [config, loading]);
 
   const handleChange = (field: keyof ProfileForm, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -314,120 +261,6 @@ export default function Dashboard() {
           icon={UserCheck}
           iconColor="bg-success/10 text-success"
         />
-      </div>
-
-      {/* ── Applications Grid ── */}
-      <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
-        {/* Grid Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b">
-          <div className="flex items-center gap-2">
-            <FileText className="h-4 w-4 text-primary" />
-            <h2 className="font-semibold text-base">My Applications</h2>
-            {!appsLoading && !appsError && (
-              <span className="ml-1 text-xs bg-primary/10 text-primary font-medium px-2 py-0.5 rounded-full">
-                {applications.length}
-              </span>
-            )}
-          </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              setAppsLoading(true);
-              setAppsError(null);
-              fetch(`${config.apiBaseUrl}/api/applications/myapplications`)
-                .then((r) => { if (!r.ok) throw new Error(`${r.status}`); return r.json(); })
-                .then((data) => setApplications(Array.isArray(data) ? data : data.applications ?? []))
-                .catch((e) => setAppsError(e.message))
-                .finally(() => setAppsLoading(false));
-            }}
-            disabled={appsLoading}
-          >
-            {appsLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : "Refresh"}
-          </Button>
-        </div>
-
-        {/* Loading State */}
-        {appsLoading && (
-          <div className="flex flex-col items-center justify-center py-16 text-muted-foreground gap-3">
-            <Loader2 className="h-6 w-6 animate-spin text-primary" />
-            <span className="text-sm">Loading applications…</span>
-          </div>
-        )}
-
-        {/* Error State */}
-        {!appsLoading && appsError && (
-          <div className="flex flex-col items-center justify-center py-16 gap-3 text-destructive">
-            <AlertCircle className="h-6 w-6" />
-            <p className="text-sm font-medium">{appsError}</p>
-            <Button variant="outline" size="sm" onClick={() => {
-              setAppsLoading(true); setAppsError(null);
-              fetch(`${config.apiBaseUrl}/api/applications/myapplications`)
-                .then((r) => { if (!r.ok) throw new Error(`${r.status}`); return r.json(); })
-                .then((data) => setApplications(Array.isArray(data) ? data : data.applications ?? []))
-                .catch((e) => setAppsError(e.message))
-                .finally(() => setAppsLoading(false));
-            }}>Try Again</Button>
-          </div>
-        )}
-
-        {/* Empty State */}
-        {!appsLoading && !appsError && applications.length === 0 && (
-          <div className="flex flex-col items-center justify-center py-16 gap-3 text-muted-foreground">
-            <FileText className="h-8 w-8 opacity-40" />
-            <p className="text-sm font-medium">No applications yet</p>
-            <p className="text-xs">Browse jobs and apply to see them listed here.</p>
-            <Button asChild size="sm" className="mt-1">
-              <Link to="/jobs">Browse Jobs</Link>
-            </Button>
-          </div>
-        )}
-
-        {/* Table */}
-        {!appsLoading && !appsError && applications.length > 0 && (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b bg-muted/40">
-                  <th className="text-left px-5 py-3 font-medium text-muted-foreground">Job Title</th>
-                  <th className="text-left px-5 py-3 font-medium text-muted-foreground hidden sm:table-cell">Company</th>
-                  <th className="text-left px-5 py-3 font-medium text-muted-foreground hidden md:table-cell">Location</th>
-                  <th className="text-left px-5 py-3 font-medium text-muted-foreground">Status</th>
-                  <th className="text-left px-5 py-3 font-medium text-muted-foreground hidden lg:table-cell">Applied</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y">
-                {applications.map((app) => (
-                  <tr key={app.id} className="hover:bg-muted/30 transition-colors group">
-                    <td className="px-5 py-3.5">
-                      <span className="font-medium text-foreground group-hover:text-primary transition-colors">
-                        {app.jobTitle ?? "—"}
-                      </span>
-                    </td>
-                    <td className="px-5 py-3.5 hidden sm:table-cell text-muted-foreground">
-                      <span className="flex items-center gap-1.5">
-                        <Building2 className="h-3.5 w-3.5 shrink-0" />
-                        {app.company ?? "—"}
-                      </span>
-                    </td>
-                    <td className="px-5 py-3.5 hidden md:table-cell text-muted-foreground">
-                      <span className="flex items-center gap-1.5">
-                        <MapPin className="h-3.5 w-3.5 shrink-0" />
-                        {app.location ?? "—"}
-                      </span>
-                    </td>
-                    <td className="px-5 py-3.5">{statusBadge(app.status)}</td>
-                    <td className="px-5 py-3.5 hidden lg:table-cell text-muted-foreground">
-                      {app.appliedDate
-                        ? new Date(app.appliedDate).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" })
-                        : "—"}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
       </div>
 
       {/* ── Backdrop ── */}
