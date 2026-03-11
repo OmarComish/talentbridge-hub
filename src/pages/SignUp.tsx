@@ -6,7 +6,9 @@ import Layout from "@/components/Layout";
 import { Eye, EyeOff } from "lucide-react";
 
 const SignUp = () => {
-  const [name, setName] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -15,11 +17,11 @@ const SignUp = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async(e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
-    if (!name.trim() || !email.trim() || !password.trim()) {
+    if (!firstName.trim() || !email.trim() || !password.trim() || !lastName.trim() || !username.trim()) {
       setError("Please fill in all fields");
       return;
     }
@@ -28,7 +30,7 @@ const SignUp = () => {
       return;
     }
 
-    const result = signup(name.trim(), email.trim(), password);
+    const result = await signup(firstName.trim(), email.trim(), password, lastName.trim(), username.trim());
     if (result.success) {
       toast({ title: "Account Created!", description: "Welcome to TalentBridge." });
       navigate("/dashboard");
@@ -53,12 +55,34 @@ const SignUp = () => {
               )}
 
               <div>
-                <label className="block text-sm font-medium text-foreground mb-1.5">Full Name</label>
+                <label className="block text-sm font-medium text-foreground mb-1.5">First Name</label>
                 <input
                   type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="John Doe"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  placeholder="John"
+                  className="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/30"
+                />
+              </div>
+
+               <div>
+                <label className="block text-sm font-medium text-foreground mb-1.5">Last Name</label>
+                <input
+                  type="text"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  placeholder="Doe"
+                  className="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/30"
+                />
+              </div>
+
+             <div>
+                <label className="block text-sm font-medium text-foreground mb-1.5">Username</label>
+                <input
+                  type="text"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  placeholder="Doe"
                   className="w-full rounded-lg border border-input bg-background px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/30"
                 />
               </div>

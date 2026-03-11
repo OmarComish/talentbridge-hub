@@ -1,94 +1,220 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import { useConfig} from "@/hooks/use-config";
 
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+/** Shape returned by the sign-in / sign-up endpoint */
+export interface AuthApiResponse {
+  _Guid: string;
+  status: string;
+  message: string;
+  token: string;
+  userName: string;
+  userId: number;
+  userGroupId: number;
+  userGroupName: string | null;
+  serviceCentreId: number;
+  roleId: number;
+}
+
+/** Subset we keep in React state / localStorage */
 export interface User {
-  id: string;
+  id: number;
   name: string;
-  email: string;
+  userName: string;
+  userGroupId: number;
+  userGroupName: string | null;
+  serviceCentreId: number;
+  roleId: number;
 }
 
 interface AuthContextType {
   user: User | null;
-  login: (email: string, password: string) => { success: boolean; error?: string };
-  signup: (name: string, email: string, password: string) => { success: boolean; error?: string };
-  logout: () => void;
+  token: string | null;
   isAuthenticated: boolean;
+  /** Calls the real login endpoint and stores the returned token */
+  login: (
+    email: string,
+    password: string
+  ) => Promise<{ success: boolean; error?: string }>;
+  /** Calls the real signup endpoint and stores the returned token */
+  signup: (
+    firstName: string,
+    lastName: string,
+    username: string,
+    email: string,
+    password: string
+  ) => Promise<{ success: boolean; error?: string }>;
+  logout: () => void;
+  /**
+   * Convenience wrapper around `fetch` that automatically attaches the
+   * Authorization header.  Drop-in replacement for `fetch`.
+   *
+   * @example
+   * const res = await authFetch("/api/jobs");
+   * const data = await res.json();
+   */
+  authFetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
 }
+
+// ─── Storage keys ─────────────────────────────────────────────────────────────
+
+const SESSION_KEY = "tb_session"; // { user, token }
+
+// ─── Context ──────────────────────────────────────────────────────────────────
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-interface StoredUser extends User {
-  password: string;
-}
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
-const USERS_KEY = "tb_users";
-const SESSION_KEY = "tb_session";
-
-const getStoredUsers = (): StoredUser[] => {
+/** Read persisted session from localStorage (safe). */
+const loadSession = (): { user: User; token: string } | null => {
   try {
-    return JSON.parse(localStorage.getItem(USERS_KEY) || "[]");
+    const raw = localStorage.getItem(SESSION_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw);
   } catch {
-    return [];
+    localStorage.removeItem(SESSION_KEY);
+    return null;
   }
 };
 
-const saveUsers = (users: StoredUser[]) => {
-  localStorage.setItem(USERS_KEY, JSON.stringify(users));
-};
+/** Map the raw API response to our slim User shape. */
+const mapResponseToUser = (res: AuthApiResponse): User => ({
+  id: res.userId,
+  name: res.userName,
+  userName: res.userName,
+  userGroupId: res.userGroupId,
+  userGroupName: res.userGroupName,
+  serviceCentreId: res.serviceCentreId,
+  roleId: res.roleId,
+});
+
+// ─── Provider ─────────────────────────────────────────────────────────────────
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [token, setToken] = useState<string | null>(null);
+  const { config, loadingConfigs} = useConfig();
 
+  // Rehydrate from localStorage on first mount
   useEffect(() => {
-    try {
-      const session = localStorage.getItem(SESSION_KEY);
-      if (session) setUser(JSON.parse(session));
-    } catch {
-      localStorage.removeItem(SESSION_KEY);
+    const session = loadSession();
+    if (session) {
+      setUser(session.user);
+      setToken(session.token);
     }
   }, []);
 
-  const login = useCallback((email: string, password: string) => {
-    const users = getStoredUsers();
-    const found = users.find((u) => u.email === email && u.password === password);
-    if (!found) return { success: false, error: "Invalid email or password" };
-    const sessionUser: User = { id: found.id, name: found.name, email: found.email };
-    setUser(sessionUser);
-    localStorage.setItem(SESSION_KEY, JSON.stringify(sessionUser));
-    return { success: true };
+  /** Persist user + token and update state in one shot. */
+  const saveSession = useCallback((newUser: User, newToken: string) => {
+    setUser(newUser);
+    setToken(newToken);
+    localStorage.setItem(SESSION_KEY, JSON.stringify({ user: newUser, token: newToken }));
   }, []);
 
-  const signup = useCallback((name: string, email: string, password: string) => {
-    const users = getStoredUsers();
-    if (users.find((u) => u.email === email)) {
-      return { success: false, error: "An account with this email already exists" };
-    }
-    const newUser: StoredUser = {
-      id: `u_${Date.now()}`,
-      name,
-      email,
-      password,
-    };
-    saveUsers([...users, newUser]);
-    const sessionUser: User = { id: newUser.id, name: newUser.name, email: newUser.email };
-    setUser(sessionUser);
-    localStorage.setItem(SESSION_KEY, JSON.stringify(sessionUser));
-    return { success: true };
-  }, []);
+  // ── login ──────────────────────────────────────────────────────────────────
+  const login = useCallback(
+    async (username: string, password: string): Promise<{ success: boolean; error?: string }> => {
+      try {
+        const res = await fetch(`${config.apiAuth}/api/auth/signin`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username, password }),
+        })
 
+        const data: AuthApiResponse = await res.json();
+
+        if (!res.ok || data.status !== "success") {
+          return { success: false, error: data.message || "Login failed" };
+        }
+
+        saveSession(mapResponseToUser(data), data.token);
+        return { success: true };
+      } catch (err) {
+        return { success: false, error: "Network error. Please try again." };
+      }
+    },
+    [saveSession]
+  );
+
+  // ── signup ─────────────────────────────────────────────────────────────────
+  const signup = useCallback(
+    async (
+      firstName: string,
+      email: string,
+      password: string,
+      lastName: string,
+      username: string
+    ): Promise<{ success: boolean; error?: string }> => {
+      try {
+        const res = await fetch(`${config.apiAuth}/api/auth/register`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ firstName, email, password, lastName, username }),
+        });
+
+        const data: AuthApiResponse = await res.json();
+
+        if (!res.ok || data.status !== "success") {
+          return { success: false, error: data.message || "Sign-up failed" };
+        }
+
+        saveSession(mapResponseToUser(data), data.token);
+
+        return { success: true };
+      } catch (err) {
+        return { success: false, error: "Network error. Please try again." };
+      }
+    },
+    [saveSession]
+  );
+
+  // ── logout ─────────────────────────────────────────────────────────────────
   const logout = useCallback(() => {
     setUser(null);
+    setToken(null);
     localStorage.removeItem(SESSION_KEY);
   }, []);
 
+  // ── authFetch ──────────────────────────────────────────────────────────────
+  /**
+   * Wraps the native `fetch` API and injects `Authorization: Bearer <token>`.
+   * Use this anywhere you would normally call `fetch` for protected endpoints.
+   */
+  const authFetch = useCallback(
+    (input: RequestInfo | URL, init: RequestInit = {}): Promise<Response> => {
+      const headers = new Headers(init.headers);
+      if (token) {
+        headers.set("Authorization", `Bearer ${token}`);
+      }
+      return fetch(input, { ...init, headers });
+    },
+    [token]
+  );
+
+  // ── context value ──────────────────────────────────────────────────────────
   return (
-    <AuthContext.Provider value={{ user, login, signup, logout, isAuthenticated: !!user }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        token,
+        isAuthenticated: !!user && !!token,
+        login,
+        signup,
+        logout,
+        authFetch,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
 };
 
+// ─── Hook ─────────────────────────────────────────────────────────────────────
+
 export const useAuth = () => {
   const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error("useAuth must be used within AuthProvider");
+  if (!ctx) throw new Error("useAuth must be used within an AuthProvider");
   return ctx;
 };

@@ -14,7 +14,7 @@ const Login = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async(e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
@@ -23,7 +23,8 @@ const Login = () => {
       return;
     }
 
-    const result = login(email, password);
+    const result = await login(email, password);
+    console.log(result);
     if (result.success) {
       toast({ title: "Welcome back!", description: "You've been signed in successfully." });
       navigate("/dashboard");

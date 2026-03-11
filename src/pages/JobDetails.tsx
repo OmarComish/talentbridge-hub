@@ -58,7 +58,7 @@ const JobDetails = () => {
     );
   }
 
-  const alreadyApplied = user ? hasApplied(user.id, job.id) : false;
+  const alreadyApplied = user ? hasApplied(String(user.id), job.id) : false;
 
   const handleApply = async() => {
     if (!user || isSubmitting) return;
@@ -70,7 +70,7 @@ const JobDetails = () => {
 
     try {
        const formData = new FormData();
-       formData.append("userId", user.id);
+       formData.append("userId", String(user.id));
        formData.append("jobId", String(job.id));
        formData.append("coverLetter", coverLetter.trim());
 
@@ -95,7 +95,7 @@ const JobDetails = () => {
        
 
       // Still update local state so UI reflects the application
-      applyToJob(user.id, job.id, coverLetter.trim(), cvFileName || "resume.pdf");
+      applyToJob(String(user.id), job.id, coverLetter.trim(), cvFileName || "resume.pdf");
 
       toast({ title: "Application Submitted!", description: `You've applied to ${job.title} at ${company.name}.` });
       setShowApplyForm(false);
@@ -110,7 +110,7 @@ const JobDetails = () => {
        setIsSubmitting(false);
     }
 
-    const result = applyToJob(user.id, job.id, coverLetter.trim(), cvFileName || "resume.pdf");
+    const result = applyToJob(String(user.id), job.id, coverLetter.trim(), cvFileName || "resume.pdf");
     if (result.success) {
       toast({ title: "Application Submitted!", description: `You've applied to ${job.title} at ${company.name}.` });
       setShowApplyForm(false);
