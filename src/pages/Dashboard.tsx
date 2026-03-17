@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import {useConfig} from "@/hooks/use-config";
 import { toast } from "@/hooks/use-toast";
+import { useAuth } from "@/context/AuthContext";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -149,6 +150,7 @@ export default function Dashboard() {
   const [saved, setSaved] = useState(false);
   const [errors, setErrors] = useState<Partial<Record<keyof ProfileForm, string>>>({});
   const {config, loading} = useConfig();
+  const {user, isAuthenticated} = useAuth();
 
   // Applications grid state
   const [applications, setApplications] = useState<Application[]>([]);
@@ -161,9 +163,10 @@ export default function Dashboard() {
       try {
         setAppsLoading(true);
         setAppsError(null);
-        const response = await fetch(`${config.apiBaseUrl}/api/applications/myapplications`);
+        const response = await fetch(`${config.apiBaseUrl}/api/applicants/jobsapplied/${user.id}`);
         if (!response.ok) throw new Error(`Failed to load applications (${response.status})`);
         const data = await response.json();
+        console.log(data)
         setApplications(Array.isArray(data) ? data : data.applications ?? []);
       } catch (err) {
         setAppsError(err instanceof Error ? err.message : "Failed to load applications");

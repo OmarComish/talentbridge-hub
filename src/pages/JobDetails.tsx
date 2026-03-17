@@ -26,8 +26,12 @@ const JobDetails = () => {
   const [cvFileName, setCvFileName] = useState("");
   const [cvFile, setCvFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-   const { config, loadingConfigs} = useConfig();
+  const { config, loadingConfigs} = useConfig();
 
+  //const userId = user.id;
+  //console.log(`${user.name} Current user ID`);
+
+    //console.log(`${user.userName} Current user ID`);
  if (loadingCompanies || loadingJobs) return null;
 
   const parseField = (value: any): string[] => {
@@ -69,6 +73,7 @@ const JobDetails = () => {
     }
 
     try {
+
        const formData = new FormData();
        formData.append("userId", String(user.id));
        formData.append("jobId", String(job.id));
@@ -88,11 +93,22 @@ const JobDetails = () => {
           const err = await response.json();
           throw new Error(err.message || "Submission failed");
        }
-
+       
        const result = await response.json();
        console.log(result);
+       const jobapplication = {
+         id: user.id,
+         jobPostingId: job.id,
+         coverLetter: coverLetter.trim()
+      };
 
-       
+       response = await fetch(`${config.apiBaseUrl}/api/applicants/apply`,{
+          method: "POST",
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body:JSON.stringify(jobapplication),
+       });
 
       // Still update local state so UI reflects the application
       applyToJob(String(user.id), job.id, coverLetter.trim(), cvFileName || "resume.pdf");
