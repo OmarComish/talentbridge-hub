@@ -24,7 +24,7 @@ const Login = () => {
     }
 
     const result = await login(email, password);
-    console.log(result);
+  
     if (result.success) {
       toast({ title: "Welcome back!", description: "You've been signed in successfully." });
       navigate("/dashboard");

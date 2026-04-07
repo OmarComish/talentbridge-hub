@@ -6,7 +6,7 @@ export interface Company {
   description: string;
   logo: string;
 }
-
+/*
 export const companies: Company[] = [
   {
     id: "c1",
@@ -48,4 +48,4 @@ export const companies: Company[] = [
     description: "Big data and analytics company helping businesses unlock insights from their data.",
     logo: "DS",
   },
-];
+];*/

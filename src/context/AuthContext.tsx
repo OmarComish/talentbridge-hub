@@ -117,7 +117,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = useCallback(
     async (username: string, password: string): Promise<{ success: boolean; error?: string }> => {
       try {
-        const res = await fetch(`${config.apiAuth}/api/auth/signin`, {
+         const urlstring = `${config.apiAuth}/api/auth/signin`;
+         console.log(urlstring);  
+          const res = await fetch(`${config.apiAuth}/api/auth/signin`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ username, password }),
@@ -132,6 +134,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         saveSession(mapResponseToUser(data), data.token);
         return { success: true };
       } catch (err) {
+         console.log("API URL:", `${config.apiAuth}/api/auth/signin`);
         return { success: false, error: "Network error. Please try again." };
       }
     },

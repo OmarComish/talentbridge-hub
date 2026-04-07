@@ -1,19 +1,20 @@
 import { Link } from "react-router-dom";
 import { MapPin, Clock, Building2, ArrowRight } from "lucide-react";
 import { Job } from "@/data/jobs";
-//import { companies } from "@/data/companies";
+import { Company } from "@/data/companies";
 import { useCompanies} from "@/hooks/use-companies";
 
 interface JobCardProps {
   job: Job;
+   companies: Company[];
 }
 
-const JobCard = ({ job }: JobCardProps) => {
-  const { companies, loading, error } = useCompanies();
+const JobCard = ({ job, companies }: JobCardProps) => {
+  //const { companies, loading, error } = useCompanies();
+  
+  //if (loading) return null; // or a skeleton loader
 
-  if (loading) return null; // or a skeleton loader
-
-  const company = companies.find((c) => c.id === job.companyId);
+  const company = companies?.find((c) => c.id === job.companyId);
   
   const typeColors: Record<string, string> = {
     "Full-time": "bg-success/10 text-success",
